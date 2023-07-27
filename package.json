@@ -1,6 +1,6 @@
 {
   "name": "kook-helper-lite-installer",
-  "version": "0.68.0",
+  "version": "0.72.0",
   "main": "dist-electron/main/index.js",
   "description": "",
   "author": "eki1563 <ekikaizeng@outlook.com>",

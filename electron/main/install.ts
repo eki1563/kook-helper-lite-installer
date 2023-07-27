@@ -145,7 +145,7 @@ export function modify() {
 export async function pack() {
   return new Promise((resolve1, reject1) => {
     const asarPath = resolve(resourcePath, 'app.asar')
-    asar.createPackageWithOptions(extractPath, asarPath, { unpackDir: '**/{detect-fullscreen,node-audio-ai-helper,node-audio-ai-helper-old,node-avhook,node-checkadmin,node-desktop-capture,node-process-windows,node-windows-helper,window-node-km-event,window-volume-control,node-screenshot}' })
+    asar.createPackageWithOptions(extractPath, asarPath, { unpackDir: '**/{detect-fullscreen,node-audio-ai-helper,node-audio-ai-helper-old,node-avhook,node-checkadmin,node-desktop-capture,node-process-windows,node-windows-helper,window-node-km-event,window-volume-control,node-screenshot,agora-electron-sdk}' })
       .then(() => {
         resolve1(void 0)
       })
