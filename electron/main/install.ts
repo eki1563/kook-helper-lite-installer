@@ -1,32 +1,31 @@
-import { homedir } from 'os'
 import { resolve } from 'node:path'
 import fs from 'fs'
 import ps from 'ps-node'
-import { versionCompare } from '../utils'
 
 const asar = require('@electron/asar')
+const regedit = require('regedit').promisified
 
-const home = process.env.HOME || homedir()
-const defaultInstallPath = resolve(home, 'AppData', 'Local', 'KOOK')
 let extractPath = ''
 let latestVersion = 'app-0.0.0'
 let resourcePath = ''
 
 export function checkPath() {
-  return new Promise((resolve1, reject1) => {
-    if (fs.existsSync(defaultInstallPath)) {
-      const dirs = fs.readdirSync(defaultInstallPath).filter(dir => /^app-\d+\.\d+\.\d+$/.test(dir))
-      if (!dirs.length) {
-        reject1(new Error('默认安装路径未发现 KOOK！'))
+  return new Promise(async (resolve1, reject1) => {
+    const key = `HKCU\\Software\\Classes\\kook\\shell\\open\\command`
+    const listResult = await regedit.list([key])
+    if (listResult[key].exists) {
+      const fullPath = listResult[key].values[''].value.replace(/^"(.*?)".*"$/, '$1')
+      const path = fullPath.replace(/\\KOOK\.exe/i, '')
+      if (fs.existsSync(path)) {
+        resourcePath = resolve(path, 'resources')
+        extractPath = resolve(resourcePath, 'dist')
+        latestVersion = path.replace(/.*(app-\d+\.\d+\.\d+)/, '$1')
+        resolve1(latestVersion)
+      } else {
+        reject1(new Error('未发现 KOOK 安装路径！'))
       }
-      for (let i = 0; i < dirs.length; i++) {
-        latestVersion = versionCompare(dirs[i], latestVersion)
-      }
-      resourcePath = resolve(defaultInstallPath, latestVersion, 'resources')
-      extractPath = resolve(resourcePath, 'dist')
-      resolve1(latestVersion)
     } else {
-      reject1(new Error('默认安装路径未发现 KOOK！'))
+      reject1(new Error('未发现 KOOK 安装路径！'))
     }
   })
 }
@@ -143,9 +142,20 @@ export function modify() {
 }
 
 export async function pack() {
+  const asarPath = resolve(resourcePath, 'app.asar')
   return new Promise((resolve1, reject1) => {
-    const asarPath = resolve(resourcePath, 'app.asar')
-    asar.createPackageWithOptions(extractPath, asarPath, { unpackDir: '**/{detect-fullscreen,node-audio-ai-helper,node-audio-ai-helper-old,node-avhook,node-checkadmin,node-desktop-capture,node-process-windows,node-windows-helper,window-node-km-event,window-volume-control,node-screenshot,agora-electron-sdk}' })
+    const unpacked = [
+      resolve(resourcePath, 'app.asar.unpacked', 'src', 'addon'),
+      resolve(resourcePath, 'app.asar.unpacked', 'src', 'screenshot'),
+      resolve(resourcePath, 'app.asar.unpacked', 'node_modules'),
+    ]
+    const unpackedDirName = []
+    unpacked.forEach(p => {
+      if (fs.existsSync(p)) {
+        unpackedDirName.push(...fs.readdirSync(p))
+      }
+    })
+    asar.createPackageWithOptions(extractPath, asarPath, { unpackDir: `**/{${ unpackedDirName.join(',') }}` })
       .then(() => {
         resolve1(void 0)
       })

@@ -13,7 +13,7 @@ async function install() {
   try {
     currentStep.value = 1
     currentStatus.value = 'process'
-    currentStepText.value = '检查 KOOK 安装路径。。。'
+    currentStepText.value = '查找 KOOK 安装路径。。。'
     const version = await checkPath()
     steps[currentStep.value - 1].description = `发现 KOOK，版本 ${ version }`
     currentStepText.value = '检查 KOOK 是否正在运行。。。'
